@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".SplashActivity" >
+    tools:context=".QuizQuestionActivity">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -16,12 +16,21 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/title"
+            android:id="@+id/question_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:text="Question"
+            android:textSize="25sp" />
+
+        <TextView
+            android:id="@+id/question_number"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Country Quiz!"
-            android:textSize="50sp" />
+            android:text="1"
+            android:textSize="25sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -29,31 +38,15 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="50dp"
+        android:layout_marginBottom="60dp"
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/test_your_knowledge"
+            android:id="@+id/question"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Test your knowledge on countries!"
-            android:textSize="25sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/rules_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Rules:"
+            android:text="What is the capital city of..."
             android:textSize="20sp" />
     </LinearLayout>
 
@@ -61,16 +54,47 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="50dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="50dp"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/take_new_quiz"
+        <TextView
+            android:id="@+id/country_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Take New Quiz" />
+            android:text="Country name"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="15dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/option_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Option 1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="15dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/option_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Option 2" />
     </LinearLayout>
 
     <LinearLayout
@@ -80,10 +104,10 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/view_past_quizzes"
+            android:id="@+id/option_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="View Past Quiz Results" />
+            android:text="Option 3" />
     </LinearLayout>
 </LinearLayout>
