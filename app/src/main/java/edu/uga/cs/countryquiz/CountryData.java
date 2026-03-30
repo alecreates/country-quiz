@@ -1,8 +1,10 @@
 package edu.uga.cs.countryquiz;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
 
 public class CountryData {
     public static final String DEBUG_TAG = "CountryData";
@@ -45,9 +47,23 @@ public class CountryData {
 
 
 
-    // Store new country in the DB
 
-    // public Country storeCountry ( Country country) {}
+    // Store a new country in the DB
+    public Country storeCountry ( Country country ) {
+        ContentValues values = new ContentValues();
+        values.put( CountryQuizDBHelper.COUNTRIES_COLUMN_NAME, country.getCountryName());
+        values.put( CountryQuizDBHelper.COUNTRIES_COLUMN_CAPITAL, country.getCapital());
+        values.put( CountryQuizDBHelper.COUNTRIES_COLUMN_CONTINENT, country.getContinent());
+        values.put( CountryQuizDBHelper.COUNTRIES_COLUMN_CODE, country.getCode());
+
+        // Insert the new row into the database table;
+        long id = db.insert( CountryQuizDBHelper.TABLE_COUNTRIES, null, values );
+
+        // store id in country instance
+        country.setId( id );
+
+        return country;
+    }
 
 
 
