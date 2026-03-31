@@ -1,8 +1,14 @@
 package edu.uga.cs.countryquiz;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CountryData {
     public static final String DEBUG_TAG = "CountryData";
@@ -18,38 +24,94 @@ public class CountryData {
     };
 
     public CountryData (Context context ) {
-        countryQuizDbHelper = CountryQuizDBHelper.getInstance( context );
+        this.countryQuizDbHelper = CountryQuizDBHelper.getInstance( context );
     }
 
     // open the database
     public void open() {
         db = countryQuizDbHelper.getWritableDatabase();
+        Log.d(DEBUG_TAG, "Database opened");
     }
 
     // close the database
     public void close() {
         if (countryQuizDbHelper != null) {
             countryQuizDbHelper.close();
+            Log.d(DEBUG_TAG, "Database closed");
         }
     }
 
     public boolean isDBOpen() {
-        return db.isOpen();
+        return db != null && db.isOpen();
     }
 
-    // Retrieve all job leads and return them as a List.
-    // This is how we restore persistent objects stored as rows in the job leads table in the database.
-    // For each retrieved row, we create a new JobLead (Java POJO object) instance and add it to the list.
+    /**
+     * Store a new country in the database.
+     */
+    public Country storeCountry(Country country) {
+        ContentValues values = new ContentValues();
+        values.put(CountryQuizDBHelper.COUNTRIES_COLUMN_NAME, country.getName());
+        values.put(CountryQuizDBHelper.COUNTRIES_COLUMN_CAPITAL, country.getCapital());
+        values.put(CountryQuizDBHelper.COUNTRIES_COLUMN_CONTINENT, country.getContinent());
+        values.put(CountryQuizDBHelper.COUNTRIES_COLUMN_CODE, country.getCode());
 
-    // public List<Country> retrieveAllCountries() {}
+        long id = db.insert(CountryQuizDBHelper.TABLE_COUNTRIES, null, values);
+        country.setId(id);
+        return country;
+    }
 
+    /**
+     * Retrieve all countries from the database.
+     */
+    public List<Country> retrieveAllCountries() {
+        ArrayList<Country> countries = new ArrayList<>();
+        Cursor cursor = null;
 
+        try {
+            cursor = db.query(CountryQuizDBHelper.TABLE_COUNTRIES, allColumns,
+                    null, null, null, null, null);
 
-    // Store new country in the DB
+            if (cursor != null && cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    long id = cursor.getLong(cursor.getColumnIndex(CountryQuizDBHelper.COUNTRIES_COLUMN_ID));
+                    String name = cursor.getString(cursor.getColumnIndex(CountryQuizDBHelper.COUNTRIES_COLUMN_NAME));
+                    String capital = cursor.getString(cursor.getColumnIndex(CountryQuizDBHelper.COUNTRIES_COLUMN_CAPITAL));
+                    String continent = cursor.getString(cursor.getColumnIndex(CountryQuizDBHelper.COUNTRIES_COLUMN_CONTINENT));
+                    String code = cursor.getString(cursor.getColumnIndex(CountryQuizDBHelper.COUNTRIES_COLUMN_CODE));
 
-    // public Country storeCountry ( Country country) {}
+                    Country country = new Country(name, capital, continent, code);
+                    country.setId(id);
+                    countries.add(country);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(DEBUG_TAG, "Exception: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return countries;
+    }
 
+    /**
+     * Check if the countries table is empty.
+     */
+    public boolean isTableEmpty() {
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + CountryQuizDBHelper.TABLE_COUNTRIES, null);
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count == 0;
+    }
 
-
+    /**
+     * Store a quiz result.
+     */
+    public void storeQuizResult(String date, int result) {
+        ContentValues values = new ContentValues();
+        values.put(CountryQuizDBHelper.QUIZZES_COLUMN_DATE, date);
+        values.put(CountryQuizDBHelper.QUIZZES_COLUMN_RESULT, result);
+        db.insert(CountryQuizDBHelper.TABLE_QUIZZES, null, values);
+    }
 }
-

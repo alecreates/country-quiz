@@ -2,8 +2,10 @@ package edu.uga.cs.countryquiz;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,8 +20,11 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button takeNewQuizButton;
-    Button viewPastQuizzesButton;
+    private static final String DEBUG_TAG = "MainActivity";
+    private Button takeNewQuizButton;
+    private Button viewPastQuizzesButton;
+    private CountryData countryData;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,31 +39,75 @@ public class MainActivity extends AppCompatActivity {
         takeNewQuizButton = findViewById(R.id.take_new_quiz);
         viewPastQuizzesButton = findViewById(R.id.view_past_quizzes);
 
-        takeNewQuizButton.setOnClickListener( new View.OnClickListener() {
+        countryData = new CountryData(this);
+
+        takeNewQuizButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    InputStream in_s = getAssets().open( "countries_data.csv" );
-
-                    CSVReader reader = new CSVReader( new InputStreamReader( in_s ) );
-
-                    // reading first row for now, testing CSV reading works
-
-                    String[] firstRow = reader.readNext(); // read first line
-
-                    String firstCountry = firstRow[0]; // assuming country is in column 0
-
-                    Intent intent = new Intent(MainActivity.this, QuizQuestionActivity.class);
-
-                    intent.putExtra("country", firstCountry); // pass it
-
-                    startActivity(intent);
-                    // put countries in DB here
-
-                } catch(Exception e) {
-
-                }
+                Intent intent = new Intent(MainActivity.this, QuizQuestionActivity.class);
+                startActivity(intent);
             }
         });
+
+        // Initialize database from CSV if needed
+        new CountryDBWriter().execute();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (countryData != null && !countryData.isDBOpen()) {
+            countryData.open();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (countryData != null) {
+            countryData.close();
+        }
+    }
+
+    /**
+     * AsyncTask to populate the database from CSV if it's empty.
+     */
+    private class CountryDBWriter extends AsyncTask<Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            countryData.open();
+            if (countryData.isTableEmpty()) {
+                Log.d(DEBUG_TAG, "Database is empty, populating from CSV...");
+                try {
+                    InputStream in_s = getAssets().open("countries_data.csv");
+                    CSVReader reader = new CSVReader(new InputStreamReader(in_s));
+                    String[] nextRow;
+                    
+                    // Skip header if it exists. Assuming no header based on previous code.
+                    while ((nextRow = reader.readNext()) != null) {
+                        if (nextRow.length >= 4) {
+                            String name = nextRow[0];
+                            String capital = nextRow[1];
+                            String continent = nextRow[2];
+                            String code = nextRow[3];
+                            Country country = new Country(name, capital, continent, code);
+                            countryData.storeCountry(country);
+                        }
+                    }
+                    Log.d(DEBUG_TAG, "Database population complete.");
+                } catch (Exception e) {
+                    Log.e(DEBUG_TAG, "Error reading CSV: " + e.getMessage());
+                }
+            } else {
+                Log.d(DEBUG_TAG, "Database already populated.");
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            // Database is ready
+            Toast.makeText(MainActivity.this, "Database ready", Toast.LENGTH_SHORT).show();
+        }
     }
 }
