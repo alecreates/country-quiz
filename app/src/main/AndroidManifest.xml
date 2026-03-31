@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CountryQuiz">
         <activity
+            android:name=".PastQuizzesActivity"
+            android:exported="false" />
+        <activity
             android:name=".QuizQuestionActivity"
             android:exported="false" />
         <activity

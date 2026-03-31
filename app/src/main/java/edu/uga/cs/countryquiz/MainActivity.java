@@ -49,6 +49,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        viewPastQuizzesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, PastQuizzesActivity.class);
+                startActivity(intent);
+            }
+        });
+
         // Initialize database from CSV if needed
         new CountryDBWriter().execute();
     }

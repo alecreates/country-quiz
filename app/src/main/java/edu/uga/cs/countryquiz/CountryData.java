@@ -23,6 +23,12 @@ public class CountryData {
             CountryQuizDBHelper.COUNTRIES_COLUMN_CODE
     };
 
+    private static final String[] allQuizColumns = {
+            CountryQuizDBHelper.QUIZZES_COLUMN_ID,
+            CountryQuizDBHelper.QUIZZES_COLUMN_DATE,
+            CountryQuizDBHelper.QUIZZES_COLUMN_RESULT
+    };
+
     public CountryData (Context context ) {
         this.countryQuizDbHelper = CountryQuizDBHelper.getInstance( context );
     }
@@ -93,6 +99,39 @@ public class CountryData {
         }
         return countries;
     }
+
+    /**
+     * Retrieve all stored past quizzes from the database.
+     */
+    public List<Quiz> retrieveAllQuizzes() {
+        ArrayList<Quiz> quizzes = new ArrayList<>();
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(CountryQuizDBHelper.TABLE_QUIZZES, allQuizColumns,
+                    null, null, null, null, null);
+
+            if (cursor != null && cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    long id = cursor.getLong(cursor.getColumnIndex(CountryQuizDBHelper.QUIZZES_COLUMN_ID));
+                    String date = cursor.getString(cursor.getColumnIndex(CountryQuizDBHelper.QUIZZES_COLUMN_DATE));
+                    String result = cursor.getString(cursor.getColumnIndex(CountryQuizDBHelper.QUIZZES_COLUMN_RESULT));
+
+                    Quiz quiz = new Quiz(date, result);
+                    quiz.setId(id);
+                    quizzes.add(quiz);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(DEBUG_TAG, "Exception: " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return quizzes;
+    }
+
 
     /**
      * Check if the countries table is empty.
