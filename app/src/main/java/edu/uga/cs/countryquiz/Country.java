@@ -1,9 +1,11 @@
 package edu.uga.cs.countryquiz;
 
+import java.io.Serializable;
+
 /**
  * A POJO class representing a Country.
  */
-public class Country {
+public class Country implements Serializable {
     private long id;
     private String name;
     private String capital;

@@ -43,6 +43,7 @@ public class QuizQuestionActivity extends AppCompatActivity {
     private List<Country> quizCountries;
     private int currentQuestionIndex = 0;
     private int score = 0;
+    private int savedSelectedId = -1;
 
     private GestureDetector gestureDetector;
 
@@ -66,11 +67,39 @@ public class QuizQuestionActivity extends AppCompatActivity {
         quizLayout = findViewById(R.id.quiz_layout);
 
         countryData = new CountryData(this);
-
         gestureDetector = new GestureDetector(this, new SwipeGestureListener());
 
-        // Load quiz data asynchronously
-        new QuizDataLoader().execute();
+        // restore data if needed
+        if (savedInstanceState != null) {
+
+            // Restore state
+            savedSelectedId = savedInstanceState.getInt("selectedAnswerId", -1);
+            currentQuestionIndex = savedInstanceState.getInt("currentQuestionIndex");
+            score = savedInstanceState.getInt("score");
+
+            quizCountries = (List<Country>) savedInstanceState.getSerializable("quizCountries");
+
+            // Load all countries again to reshuffle options
+            new QuizDataLoader().execute();
+
+        } else {
+            // Normal first launch
+            new QuizDataLoader().execute();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt("currentQuestionIndex", currentQuestionIndex);
+        outState.putInt("score", score);
+
+        // Save selected answer
+        outState.putInt("selectedAnswerId", answersGroup.getCheckedRadioButtonId());
+
+        // Save quiz countries (must be Serializable or Parcelable)
+        outState.putSerializable("quizCountries", new ArrayList<>(quizCountries));
     }
 
     @Override
@@ -152,6 +181,14 @@ public class QuizQuestionActivity extends AppCompatActivity {
         option3.setText(options.get(2));
 
         answersGroup.clearCheck();
+
+        // Restore selected answer ONLY for the current question
+        if (savedSelectedId != -1) {
+            answersGroup.check(savedSelectedId);
+
+            // Reset so it doesn't apply to future questions
+            savedSelectedId = -1;
+        }
     }
 
     private void finishQuiz() {
@@ -200,9 +237,15 @@ public class QuizQuestionActivity extends AppCompatActivity {
                 finish();
                 return;
             }
-            quizCountries = new ArrayList<>(allCountries);
-            Collections.shuffle(quizCountries);
-            quizCountries = quizCountries.subList(0, 6);
+
+
+            if (quizCountries == null) {
+                // First launch only
+                quizCountries = new ArrayList<>(allCountries);
+                Collections.shuffle(quizCountries);
+                quizCountries = quizCountries.subList(0, 6);
+            }
+
             displayQuestion();
         }
     }
