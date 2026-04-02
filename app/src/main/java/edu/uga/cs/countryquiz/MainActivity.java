@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                     CSVReader reader = new CSVReader(new InputStreamReader(in_s));
                     String[] nextRow;
                     
-                    // Skip header if it exists. Assuming no header based on previous code.
+                    // Setup for app's data.
                     while ((nextRow = reader.readNext()) != null) {
                         if (nextRow.length >= 4) {
                             String name = nextRow[0];

@@ -2,18 +2,21 @@ package edu.uga.cs.countryquiz;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,7 +36,7 @@ public class QuizQuestionActivity extends AppCompatActivity {
     private RadioButton option1;
     private RadioButton option2;
     private RadioButton option3;
-    private Button nextButton;
+    private View quizLayout;
 
     private CountryData countryData;
     private List<Country> allCountries;
@@ -41,12 +44,14 @@ public class QuizQuestionActivity extends AppCompatActivity {
     private int currentQuestionIndex = 0;
     private int score = 0;
 
+    private GestureDetector gestureDetector;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_quiz_question);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.quiz_container), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -58,22 +63,48 @@ public class QuizQuestionActivity extends AppCompatActivity {
         option1 = findViewById(R.id.option_1);
         option2 = findViewById(R.id.option_2);
         option3 = findViewById(R.id.option_3);
-        nextButton = findViewById(R.id.next_button);
+        quizLayout = findViewById(R.id.quiz_layout);
 
         countryData = new CountryData(this);
 
-        nextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleNextButton();
-            }
-        });
+        gestureDetector = new GestureDetector(this, new SwipeGestureListener());
 
         // Load quiz data asynchronously
         new QuizDataLoader().execute();
     }
 
-    private void handleNextButton() {
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        // this ensures swipes are detected even if children mess up the touches
+        gestureDetector.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
+        private static final int SWIPE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (e1 == null || e2 == null) return false;
+            float diffX = e2.getX() - e1.getX();
+            // left swipe
+            if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffX < 0) {
+                    handleSwipeLeft();
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private void handleSwipeLeft() {
         int selectedId = answersGroup.getCheckedRadioButtonId();
         if (selectedId == -1) {
             Toast.makeText(this, "Please select an answer", Toast.LENGTH_SHORT).show();
@@ -105,7 +136,6 @@ public class QuizQuestionActivity extends AppCompatActivity {
         List<String> options = new ArrayList<>();
         options.add(currentCountry.getCapital());
 
-        // Pick 2 random wrong answers
         Random random = new Random();
         while (options.size() < 3) {
             Country randomCountry = allCountries.get(random.nextInt(allCountries.size()));
@@ -122,19 +152,21 @@ public class QuizQuestionActivity extends AppCompatActivity {
         option3.setText(options.get(2));
 
         answersGroup.clearCheck();
-
-        if (currentQuestionIndex == 5) {
-            nextButton.setText("Finish");
-        }
     }
 
     private void finishQuiz() {
-        // Save result
+        // Save result to DB
         String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         new QuizResultSaver().execute(currentDate, String.valueOf(score));
 
-        Toast.makeText(this, "Quiz Finished! Score: " + score + "/6", Toast.LENGTH_LONG).show();
-        finish();
+        // Hide quiz UI
+        quizLayout.setVisibility(View.GONE);
+
+        // Show fragment with result
+        QuizResultFragment fragment = QuizResultFragment.newInstance(score);
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment_container, fragment);
+        transaction.commit();
     }
 
     @Override
@@ -153,9 +185,6 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * AsyncTask to load countries and set up the quiz.
-     */
     private class QuizDataLoader extends AsyncTask<Void, List<Country>> {
         @Override
         protected List<Country> doInBackground(Void... params) {
@@ -171,19 +200,13 @@ public class QuizQuestionActivity extends AppCompatActivity {
                 finish();
                 return;
             }
-
-            // Select 6 random countries for the quiz
             quizCountries = new ArrayList<>(allCountries);
             Collections.shuffle(quizCountries);
             quizCountries = quizCountries.subList(0, 6);
-
             displayQuestion();
         }
     }
 
-    /**
-     * AsyncTask to save the quiz result.
-     */
     private class QuizResultSaver extends AsyncTask<String, Void> {
         @Override
         protected Void doInBackground(String... params) {
@@ -196,7 +219,7 @@ public class QuizQuestionActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Void result) {
-            Log.d(DEBUG_TAG, "Quiz result saved");
+            // Nothing to do after saving result
         }
     }
 }
