@@ -44,7 +44,7 @@ public class QuizQuestionActivity extends AppCompatActivity {
     private int currentQuestionIndex = 0;
     private int score = 0;
     private int savedSelectedId = -1;
-
+    private List<List<String>> questionOptions;
     private GestureDetector gestureDetector;
 
     @Override
@@ -79,6 +79,8 @@ public class QuizQuestionActivity extends AppCompatActivity {
 
             quizCountries = (List<Country>) savedInstanceState.getSerializable("quizCountries");
 
+            questionOptions = (List<List<String>>) savedInstanceState.getSerializable("questionOptions");
+
             // Load all countries again to reshuffle options
             new QuizDataLoader().execute();
 
@@ -100,6 +102,9 @@ public class QuizQuestionActivity extends AppCompatActivity {
 
         // Save quiz countries (must be Serializable or Parcelable)
         outState.putSerializable("quizCountries", new ArrayList<>(quizCountries));
+
+        // save quiz options
+        outState.putSerializable("questionOptions", new ArrayList<>(questionOptions));
     }
 
     @Override
@@ -162,19 +167,7 @@ public class QuizQuestionActivity extends AppCompatActivity {
         questionNumber.setText(String.valueOf(currentQuestionIndex + 1));
         countryName.setText(currentCountry.getName());
 
-        List<String> options = new ArrayList<>();
-        options.add(currentCountry.getCapital());
-
-        Random random = new Random();
-        while (options.size() < 3) {
-            Country randomCountry = allCountries.get(random.nextInt(allCountries.size()));
-            String randomCapital = randomCountry.getCapital();
-            if (!options.contains(randomCapital)) {
-                options.add(randomCapital);
-            }
-        }
-
-        Collections.shuffle(options);
+        List<String> options = questionOptions.get(currentQuestionIndex);
 
         option1.setText(options.get(0));
         option2.setText(options.get(1));
@@ -238,12 +231,33 @@ public class QuizQuestionActivity extends AppCompatActivity {
                 return;
             }
 
-
             if (quizCountries == null) {
                 // First launch only
                 quizCountries = new ArrayList<>(allCountries);
                 Collections.shuffle(quizCountries);
                 quizCountries = quizCountries.subList(0, 6);
+
+                questionOptions = new ArrayList<>();
+
+                // also initialize quiz options
+                for (int i = 0; i < quizCountries.size(); i++) {
+                    Country currentCountry = quizCountries.get(i);
+
+                    List<String> options = new ArrayList<>();
+                    options.add(currentCountry.getCapital());
+
+                    Random random = new Random();
+                    while (options.size() < 3) {
+                        Country randomCountry = allCountries.get(random.nextInt(allCountries.size()));
+                        String randomCapital = randomCountry.getCapital();
+                        if (!options.contains(randomCapital)) {
+                            options.add(randomCapital);
+                        }
+                    }
+
+                    Collections.shuffle(options);
+                    questionOptions.add(options);
+                }
             }
 
             displayQuestion();
