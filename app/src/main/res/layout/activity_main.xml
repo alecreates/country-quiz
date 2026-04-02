@@ -45,7 +45,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginLeft="15dp"
         android:layout_marginTop="20dp"
+        android:layout_marginRight="15dp"
         android:orientation="horizontal">
 
         <TextView
@@ -53,7 +55,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Rules:"
+            android:text="Welcome to the Country Quiz App! Answer each question by selecting the correct capital city. Swipe left to move to the next question after answering."
+            android:textAlignment="center"
             android:textSize="20sp" />
     </LinearLayout>
 

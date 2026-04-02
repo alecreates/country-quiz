@@ -18,6 +18,11 @@ import com.opencsv.CSVReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+/**
+ * Main entry point of the Country Quiz application.
+ * Provides options to start a new quiz or view past quiz results.
+ * Also initializes the country database from a CSV file if needed.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String DEBUG_TAG = "MainActivity";
@@ -25,6 +30,13 @@ public class MainActivity extends AppCompatActivity {
     private Button viewPastQuizzesButton;
     private CountryData countryData;
 
+    /**
+     * Called when the activity is first created.
+     * Initializes UI components, sets up button listeners for navigation,
+     * and triggers database initialization if necessary.
+     *
+     * @param savedInstanceState Bundle containing previously saved state (if any)
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
         new CountryDBWriter().execute();
     }
 
+    /**
+     * Called when the activity becomes visible again.
+     * Reopens the database connection if it is not already open.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -69,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when the activity is paused.
+     * Closes the database connection to release resources.
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -78,9 +98,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * AsyncTask to populate the database from CSV if it's empty.
+     * AsyncTask that populates the database with country data from a CSV file
+     * if the database is currently empty.
      */
     private class CountryDBWriter extends AsyncTask<Void, Void> {
+
+        /**
+         * Runs in the background to check if the database is empty and,
+         * if so, reads country data from a CSV file and stores it in the database.
+         *
+         * @param params No parameters required
+         * @return null
+         */
         @Override
         protected Void doInBackground(Void... params) {
             countryData.open();
@@ -112,6 +141,12 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
 
+        /**
+         * Called after the database initialization completes.
+         * Displays a confirmation message to the user.
+         *
+         * @param result Void result
+         */
         @Override
         protected void onPostExecute(Void result) {
             // Database is ready

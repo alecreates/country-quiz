@@ -11,12 +11,23 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+/**
+ * Fragment that displays the final quiz results.
+ * Shows the user's score along with a performance message,
+ * and provides an option to close the quiz.
+ */
 public class QuizResultFragment extends Fragment {
 
     private static final String ARG_SCORE = "score";
 
     private int score;
 
+    /**
+     * Creates a new instance of QuizResultFragment with the given score.
+     *
+     * @param score The user's final quiz score
+     * @return A new instance of QuizResultFragment with arguments set
+     */
     public static QuizResultFragment newInstance(int score) {
         QuizResultFragment fragment = new QuizResultFragment();
         Bundle args = new Bundle();
@@ -25,6 +36,12 @@ public class QuizResultFragment extends Fragment {
         return fragment;
     }
 
+    /**
+     * Called when the fragment is created.
+     * Retrieves the score passed in through fragment arguments.
+     *
+     * @param savedInstanceState Bundle containing previously saved state (if any)
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +50,16 @@ public class QuizResultFragment extends Fragment {
         }
     }
 
+    /**
+     * Inflates the fragment layout and initializes UI components.
+     * Displays the user's score and a corresponding feedback message,
+     * and sets up the close button to exit the quiz.
+     *
+     * @param inflater LayoutInflater used to inflate the view
+     * @param container Parent view that the fragment UI will attach to
+     * @param savedInstanceState Bundle containing previously saved state (if any)
+     * @return The root view of the fragment layout
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {

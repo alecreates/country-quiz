@@ -33,13 +33,17 @@ public class CountryData {
         this.countryQuizDbHelper = CountryQuizDBHelper.getInstance( context );
     }
 
-    // open the database
+    /**
+     * Open the DB
+     */
     public void open() {
         db = countryQuizDbHelper.getWritableDatabase();
         Log.d(DEBUG_TAG, "Database opened");
     }
 
-    // close the database
+    /**
+     * Close the DB
+     */
     public void close() {
         if (countryQuizDbHelper != null) {
             countryQuizDbHelper.close();

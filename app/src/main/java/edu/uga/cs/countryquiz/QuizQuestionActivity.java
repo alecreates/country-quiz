@@ -26,10 +26,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+/**
+ * Activity that manages the quiz gameplay.
+ * Displays questions, handles user input via swipe gestures,
+ * tracks score, and saves results upon completion.
+ */
 public class QuizQuestionActivity extends AppCompatActivity {
-
     private static final String DEBUG_TAG = "QuizQuestionActivity";
-
     private TextView questionNumber;
     private TextView countryName;
     private RadioGroup answersGroup;
@@ -37,7 +40,6 @@ public class QuizQuestionActivity extends AppCompatActivity {
     private RadioButton option2;
     private RadioButton option3;
     private View quizLayout;
-
     private CountryData countryData;
     private List<Country> allCountries;
     private List<Country> quizCountries;
@@ -47,6 +49,12 @@ public class QuizQuestionActivity extends AppCompatActivity {
     private List<List<String>> questionOptions;
     private GestureDetector gestureDetector;
 
+    /**
+     * Called when the activity is first created.
+     * Initializes UI components, gesture detection, and starts loading quiz data.
+     *
+     * @param savedInstanceState Bundle containing previously saved state (if any)
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,7 +79,6 @@ public class QuizQuestionActivity extends AppCompatActivity {
 
         // restore data if needed
         if (savedInstanceState != null) {
-
             // Restore state
             savedSelectedId = savedInstanceState.getInt("selectedAnswerId", -1);
             currentQuestionIndex = savedInstanceState.getInt("currentQuestionIndex");
@@ -90,6 +97,20 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Saves the current state of the quiz before the activity is destroyed.
+     * This allows the quiz to be restored if the app is temporarily interrupted
+     * (e.g., screen rotation, app switch, or incoming phone call).
+     *
+     * The following data is saved:
+     * - Current question index
+     * - Current score
+     * - Selected answer for the current question
+     * - List of quiz countries
+     * - Pre-generated answer options for each question
+     *
+     * @param outState Bundle in which to place saved state data
+     */
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -107,11 +128,24 @@ public class QuizQuestionActivity extends AppCompatActivity {
         outState.putSerializable("questionOptions", new ArrayList<>(questionOptions));
     }
 
+    /**
+     * Handles touch events for the activity and passes them to the gesture detector.
+     *
+     * @param event The motion event detected
+     * @return true if the gesture detector handled the event, otherwise default handling
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
+    /**
+     * Ensures that all touch events are passed to the gesture detector
+     * even if child views consume them.
+     *
+     * @param ev The motion event being dispatched
+     * @return true if handled, otherwise passes to superclass
+     */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         // this ensures swipes are detected even if children mess up the touches
@@ -119,10 +153,24 @@ public class QuizQuestionActivity extends AppCompatActivity {
         return super.dispatchTouchEvent(ev);
     }
 
+    /**
+     * Detects swipe gestures. Specifically listens for left swipe
+     * to trigger advancing to the next quiz question.
+     */
     private class SwipeGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final int SWIPE_THRESHOLD = 50;
         private static final int SWIPE_VELOCITY_THRESHOLD = 50;
 
+        /**
+         * Detects a fling (swipe) gesture and determines if it qualifies
+         * as a left swipe based on distance and velocity thresholds.
+         *
+         * @param e1 Initial motion event
+         * @param e2 Final motion event
+         * @param velocityX Velocity along the X axis
+         * @param velocityY Velocity along the Y axis
+         * @return true if a left swipe is detected, false otherwise
+         */
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             if (e1 == null || e2 == null) return false;
@@ -138,6 +186,10 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Handles logic when the user swipes left to proceed to the next question.
+     * Checks the selected answer, updates score, and advances the quiz.
+     */
     private void handleSwipeLeft() {
         int selectedId = answersGroup.getCheckedRadioButtonId();
         if (selectedId == -1) {
@@ -162,6 +214,10 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Displays the current quiz question and its answer choices.
+     * Updates the UI with the country name and corresponding options.
+     */
     private void displayQuestion() {
         Country currentCountry = quizCountries.get(currentQuestionIndex);
         questionNumber.setText(String.valueOf(currentQuestionIndex + 1));
@@ -184,6 +240,10 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Ends the quiz, saves the result to the database, and displays
+     * the result fragment with the user's final score.
+     */
     private void finishQuiz() {
         // Save result to DB
         String currentDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
@@ -199,6 +259,10 @@ public class QuizQuestionActivity extends AppCompatActivity {
         transaction.commit();
     }
 
+    /**
+     * Called when the activity resumes.
+     * Reopens the database connection if it was previously closed.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -207,6 +271,10 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when the activity is paused.
+     * Closes the database connection to release resources.
+     */
     @Override
     protected void onPause() {
         super.onPause();
@@ -215,7 +283,17 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * AsyncTask that loads all country data from the database
+     * in the background and prepares quiz questions.
+     */
     private class QuizDataLoader extends AsyncTask<Void, List<Country>> {
+        /**
+         * Retrieves all countries from the database in a background thread.
+         *
+         * @param params No parameters required
+         * @return List of all countries
+         */
         @Override
         protected List<Country> doInBackground(Void... params) {
             countryData.open();
@@ -223,6 +301,12 @@ public class QuizQuestionActivity extends AppCompatActivity {
             return allCountries;
         }
 
+        /**
+         * Called after background execution completes.
+         * Initializes quiz questions and displays the first question.
+         *
+         * @param countries List of countries retrieved from the database
+         */
         @Override
         protected void onPostExecute(List<Country> countries) {
             if (countries == null || countries.size() < 6) {
@@ -264,7 +348,17 @@ public class QuizQuestionActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * AsyncTask that saves the quiz result (date and score)
+     * to the database in the background.
+     */
     private class QuizResultSaver extends AsyncTask<String, Void> {
+        /**
+         * Saves the quiz result to the database.
+         *
+         * @param params Contains the date and score as strings
+         * @return null
+         */
         @Override
         protected Void doInBackground(String... params) {
             String date = params[0];
@@ -274,6 +368,12 @@ public class QuizQuestionActivity extends AppCompatActivity {
             return null;
         }
 
+        /**
+         * Called after the quiz result has been saved.
+         * No additional action is required.
+         *
+         * @param result Void result
+         */
         @Override
         protected void onPostExecute(Void result) {
             // Nothing to do after saving result
